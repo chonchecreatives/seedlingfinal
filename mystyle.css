@@ -1,0 +1,37 @@
+body {
+    padding-top: 25px;
+    background-color: azure;
+    
+}
+
+h1{
+    font-family: 'Merriweather', serif;
+    
+}
+
+.row{
+    padding: 50px;
+    
+}
+
+.col{
+    padding: 40px;
+    
+}
+
+.container text-center{
+    padding-top: 10px;
+    
+}
+
+.table{
+    padding-top: 20px;
+        
+    
+}
+
+.tbody{
+    padding: 15px;
+    
+    
+}
