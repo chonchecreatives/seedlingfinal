@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<meta name="referrer" content="origin" />
+	<title></title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<script id="ecwid-wix-sdk-loader" type="text/javascript" src="//static.parastorage.com/services/js-sdk/1.425.0/js/wix.min.js"></script>
+    <script src="https://d3u173cvt0s8do.cloudfront.net/jquery/3.5.1/jquery.min.js"></script>
+	<script type="text/javascript" src="/static/2022/2022-44823-g76b85abc806ed8/javascripts/storage.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/2022/2022-44823-g76b85abc806ed8/stylesheets/css/frontend.css"/>
+
+	<script type="text/javascript">
+		window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+			var message = 'Settings error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber + ' Column: ' + column + ' StackTrace: ' +  errorObj;
+			$.ajax({
+				url: "/wix/app/log" + window.location.search,
+				type: "POST",
+				data: message,
+				contentType: "text/plain; charset=UTF-8"
+			});
+		}
+	</script>
+	<script type="text/javascript">
+		/**************************************************/
+		/************* OFFICIAL ECWID APP *****************/
+		/**************************************************/
+		try {
+			if(typeof Wix === 'undefined' || typeof Wix.Utils === 'undefined') {
+				var url = window.location.href;
+				var match = url.match(/sdkerror=\d+/);
+
+				if (match != null) {
+					var errCount = parseInt(match[0].replace("sdkerror=", ""), 10);
+					if (errCount < 10) {
+						window.location.href = url.replace(match[0], "sdkerror=" + (errCount + 1));
+					}
+					if (errCount == 10) {
+						$(document).ready(function() {
+							var timings = "";
+							if (performance && performance.getEntries) {
+								performance.getEntries().forEach(function(i) {
+									timings += "dur: " + i.duration.toFixed(2)
+											+ " start: " + i.startTime.toFixed(2)
+											+ " name: " + i.name + "\n";
+								});
+
+							}
+
+							var wixUndefinedOnReady = (typeof Wix === 'undefined');
+							var wixUtilsUndefinedOnReady = wixUndefinedOnReady || (typeof Wix.Utils === 'undefined');
+							var wixSdkLoaderElement = document.getElementById("ecwid-wix-sdk-loader");
+							var wixSdkLoaderElementHtml = (wixSdkLoaderElement || {} ).outerHTML;
+							var logMessage = "Wix or Wix.Utils is undefined at least 10 times." +
+									" wixSdkLoaderElementHtml: " + wixSdkLoaderElementHtml +
+									" Agent: " + navigator.userAgent +
+									" wixUndefinedOnReady: " + wixUndefinedOnReady +
+									" wixUtilsUndefinedOnReady: " + wixUtilsUndefinedOnReady +
+									" timings: " + timings;
+							$.ajax({
+								url: "/wix/app/log" + window.location.search,
+								type: "PUT",
+								data: logMessage,
+								contentType: "text/plain; charset=UTF-8"
+							});
+						});
+					}
+				} else {
+					var sdkerror = (url.split("?")[1] ? '&' : '?') + "sdkerror=1";
+					var i = url.indexOf('#');
+					if (i != -1) {
+						var parts = [url.slice(0,i), url.slice(i+1)];
+						window.location.href = parts[0] + sdkerror + '#' + parts[1];
+					} else {
+						window.location.href = url + sdkerror;
+					}
+				}
+			}
+		} catch(e) {
+		}
+
+		// Так как у нас изначально пустой тайтл, ставим в него название магазина, которое берем у Викса
+		Wix.getSiteInfo(function(siteInfo) {
+			if (!!siteInfo.pageTitle) {
+				document.title = siteInfo.pageTitle;
+			}
+		});
+
+		function getWixTop(callback) {
+			Wix.getBoundingRectAndOffsets(function (appData) {
+				var top = appData && appData.offsets ? appData.offsets.y : 0;
+				Wix.getAdsOnPage(function (adsData) {
+					//а в виксе может быть реклама, ее высоту тоже надо учитывать %(
+					var adsHeight = adsData && adsData.top && adsData.top.height ? adsData.top.height : 0;
+					top -= adsHeight;
+					callback(top)
+				});
+			});
+		}
+
+		function isIOs() {
+			var userAgent = window.navigator.userAgent
+			return !!(isIPad() || userAgent.match(/iPhone/i))
+		}
+
+		function isSafari() {
+			var safari = /AppleWebKit\//.test(navigator.userAgent) && /Safari\//.test(navigator.userAgent);
+			var chrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+			return safari && !chrome;
+		}
+
+		function isDebugActive() {
+			var referrer = document.referrer.split("?")[1] || "";
+			return referrer.indexOf("debug=1") > -1;
+		}
+
+		function isInteger(arg) {
+			return arg === parseInt(arg);
+		}
+
+		function isIPad() {
+			var userAgent = window.navigator.userAgent
+			return !!userAgent.match(/iPad/i)
+		}
+		function setCookie(cookieName, cookieValue, cookieExpire) {
+			var expire = new Date();
+			expire.setDate(expire.getDate() + cookieExpire);
+			var value = escape(cookieValue) + ((cookieExpire == null) ? "" : "; expires=" + expire.toUTCString());
+			document.cookie = cookieName + "=" + value;
+		}
+		function getApiUrl(endpoint) {
+			return endpoint + '?instance=d6TxwPmCI_jr1Bpycqm5e38w7uGrgJgLK3B2dNzI5u8.eyJpbnN0YW5jZUlkIjoiODZlZWJiY2ItYTAzMy00NjBkLTk3NTAtZjliYjFiMmNmNTg3IiwiYXBwRGVmSWQiOiIxMmYxZmJhYi04YjlkLTMwMDItODdiNS0yOTcyODk3ZTgzMTQiLCJzaWduRGF0ZSI6IjIwMjItMTItMTdUMDA6MDk6MjMuNDU2WiIsInZlbmRvclByb2R1Y3RJZCI6IldJWF9QUkVNSVVNIiwiZGVtb01vZGUiOmZhbHNlLCJhaWQiOiJiOWY3MTcxNC01NzVhLTRmZmYtOTE0MS1jOThjN2E4M2ZlMDAiLCJzaXRlT3duZXJJZCI6IjMzNWRkYWY2LTYyODktNGEwOC1iMzUyLTAyMTU4YzdhYjI0YyJ9';
+		}
+		function hex2rgba(hex, opacity) {
+			hex = hex.replace('#', '');
+			var r = parseInt(hex.substring(0, 2), 16);
+			var g = parseInt(hex.substring(2, 4), 16);
+			var b = parseInt(hex.substring(4, 6), 16);
+
+			var result = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')';
+			return result;
+		}
+
+		function updateOpacity(color, opacity) {
+			if (!color) {
+				return null;
+			}
+
+			if (color.indexOf('#') === 0) {
+				return hex2rgba(color, opacity)
+			}
+
+			if (color.indexOf('rgba(') === 0) {
+				var colors = color.replace('rgba(', '').split(',').map(function(x){ return parseInt(x, 10); })
+				var r = colors[0];
+				var g = colors[1];
+				var b = colors[2];
+				return 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')';
+			}
+		}
+
+		function getConsts() {
+			return {
+				booleanValues: [true, false],
+				sizeValues: ['LARGE', 'MEDIUM', 'SMALL'],
+				listLayoutValues: ['CENTER', 'LEFT', 'RIGHT', 'JUSTIFY'],
+				detailsLayoutValues: ['TWO_COLUMNS_SIDEBAR_ON_THE_RIGHT', 'TWO_COLUMNS_SIDEBAR_ON_THE_RIGHT_BELOW_IMAGE', 'TWO_COLUMNS_SIDEBAR_ON_THE_LEFT', 'THREE_COLUMNS_SIDEBAR_ON_THE_RIGHT'],
+				galleryLayoutValues: ['IMAGE_SINGLE_THUMBNAILS_HORIZONTAL', 'IMAGE_SINGLE_THUMBNAILS_VERTICAL', 'IMAGE_FEED'],
+				aspectRatioValues: ['PORTRAIT_0667', 'PORTRAIT_075', 'SQUARE_1', 'LANDSCAPE_1333', 'LANDSCAPE_15'],
+				showValues: ['SHOW', 'HIDE', 'SHOW_ON_HOVER'],
+				positionValues: ['SHOW_ON_IMAGE', 'SHOW_BELOW_IMAGE', 'SHOW_ON_HOVER', 'HIDE', 'SHOW_TEXT_ONLY'],
+				viewValues: ['GRID', 'LIST', 'TABLE'],
+				breadcrumbsPosition: ['NAVIGATION_CONTAINER', 'PRODUCT_DETAILS_SIDEBAR', 'HIDE']
+			};
+		}
+
+        function toHex(str) {
+            try {
+                return unescape(encodeURIComponent(str))
+                        .split('')
+                        .map(function(v) {
+                            var s = v.charCodeAt(0).toString(16);
+                            while (s.length < 2) s = "0" + s;
+                            return s;
+                        }).join('');
+            } catch(e) {
+                window.console.error('invalid text input: ' + str, e);
+                return str;
+            }
+        }
+
+        function fromHex(hex) {
+            try {
+                return decodeURIComponent(hex.replace(/(..)/g,'%$1'));
+            } catch(e) {
+                window.console.error('invalid hex input: ' + hex, e);
+                return hex;
+            }
+        }
+
+        var lastPushTimestamp = 0;
+		var changeStateDelay = 200;
+        var lastRequestedState = null;
+
+        function defferChangeState(newState) {
+        	if (lastRequestedState == newState) {
+        		return;
+            }
+            lastRequestedState = newState;
+            deffer(function() {
+            	ecwidState.changeState(newState);
+            });
+        }
+
+		function deffer(callback) {
+			var diff = Date.now() - lastPushTimestamp;
+			if (diff >= changeStateDelay) {
+				lastPushTimestamp = Date.now();
+				callback.call();
+            } else {
+                setTimeout(function() {
+                	deffer(callback);
+                }, changeStateDelay);
+            }
+        }
+
+        var needToScroll = false;
+
+		function EcwidState() {
+			this.pushState = function(ecwidState) {
+				this.ecwidState = ecwidState;
+
+				if (/[ #%]/.test(ecwidState)) {
+                    Wix.pushState("hex:" + toHex(ecwidState))
+				} else {
+                    Wix.pushState(ecwidState)
+				}
+
+				needToScroll = true;
+				console && console.log("EcwidState: push ecwid state to wix: " + ecwidState)
+			}
+			this.changeState = function(newState) {
+				console && console.log("EcwidState: change state")
+
+				if (newState.startsWith("!%2F") || newState.startsWith("hex%3A")) {
+					newState = decodeURIComponent(newState);
+				}
+
+				if (this.ecwidState != null && this.ecwidState != newState) {
+					this.ecwidState = null;
+					return;
+				}
+
+				changeEcwidState(newState);
+				this.ecwidState = null;
+				console && console.log("EcwidState: change state to new state: " + newState)
+			}
+		}
+		var ecwidState = new EcwidState();
+		var updateHeightDelay = 50;
+		if (isIOs()){
+			updateHeightDelay = 150;
+		}
+		var storeUrlOnServer = "https://www.seedlingtheatrecompany.com/online-store";
+
+		var draftSettingsOnServer = null;
+		var draftSettingsSameAsPublished = true;
+
+		function isInsideWixEditor() {
+			return Wix.Utils.getViewMode() === 'editor' || Wix.Utils.getViewMode() === 'preview';
+		}
+
+		(function(){
+			window.EcwidLog = function (message) {
+				try {
+					if (window.localStorage.getItem("show_ec_logs") === 'true') {
+						var arg = Array.prototype.slice.call(arguments);
+						console && console.log.apply(this, arg);
+					}
+				} catch (e) {
+				}
+			}
+
+			var prevHeight = -1;
+			function updateWixHeight(height) {
+				var $body = $('body');
+				var wixDeviceType = Wix.Utils.getDeviceType();
+
+				function changeWixFrameHeight(height) {
+					if (prevHeight !== height) {
+						Wix.setHeight(height);
+						prevHeight = height;
+						EcwidLog("Wix " + wixDeviceType + " height change: " + height);
+					}
+				}
+
+				function calculateBodyHeight() {
+					var bottomSpace = 20;
+					var newHeight = $body.outerHeight(true);
+					if (!isIOs()) {
+						return newHeight;
+					}
+					if (!(prevHeight - bottomSpace < newHeight && newHeight < prevHeight + bottomSpace)) {
+						return newHeight + bottomSpace / 2;
+					}
+					return prevHeight
+				}
+
+				function calculateSslPopupBottom() {
+					var $sslPopup = $('div.ecwid-AddressForm-SSLencryptedPopup');
+					if ($sslPopup.length > 0) {
+						return $sslPopup.offset().top + $sslPopup.height();
+					}
+					return 0;
+				}
+
+				function calculateIframeBottom() {
+					var $iframeWidgetLift = $('.fb_iframe_widget_lift');
+					if ($iframeWidgetLift.length > 0) {
+						return $iframeWidgetLift.offset().top + $iframeWidgetLift.height();
+					}
+					return 0;
+				}
+
+				function calculatePopupBottom() {
+					var $ecwidPopup = $('.ecwid-popup');
+					var $ecwidPopupInner = $ecwidPopup.find('.ecwid-popup-touchLimiter > table');
+					if ($ecwidPopupInner.length > 0) {
+						var popupSpaces = $ecwidPopup.outerHeight(true) - $ecwidPopup.height();
+						return Math.max($ecwidPopupInner.outerHeight() + popupSpaces,
+								480  + 1);
+					}
+					return 0;
+				}
+
+				function calculateScrollHeight() {
+					if (isSafari()) {
+						if (document.body.scrollHeight === undefined && document.documentElement.scrollHeight === undefined) {
+							return 400;
+						} else {
+							var bodyScrollHeight = document.body.scrollHeight || Number.MAX_VALUE;
+							var documentElementScrollHeight = document.documentElement.scrollHeight || Number.MAX_VALUE;
+							return Math.min(bodyScrollHeight, documentElementScrollHeight);
+						}
+					}
+					return document.body.scrollHeight;
+				}
+
+				function getProductFiltersPopupHeight() {
+					if (document.getElementsByTagName('html')[0].classList.contains('ec-has-filters-popup')) {
+						var openedPopup = $('.ec-filters__wrap-inner');
+						var openedFilter = $('.ec-openable-block--opened .ec-openable-block__wrap-inner');
+
+						if (openedFilter.length > 0) {
+							return openedFilter[0].offsetHeight + 60
+						} else if (openedPopup.length > 0) {
+							return openedPopup[0].offsetHeight + 60
+						}
+					}
+					return 0;
+				}
+
+				var ua = navigator.userAgent.toLowerCase();
+				if (!(ua.indexOf("msie") !== -1 && document.documentMode <= 8)) {
+					$body.css('minHeight', '');
+				}
+
+				var bodyHeight = calculateBodyHeight();
+				var sslPopupBottom = calculateSslPopupBottom();
+				var iframeBottom = calculateIframeBottom();
+				var popupBottom = calculatePopupBottom();
+				var scrollHeight = calculateScrollHeight();
+
+				var ecwidHeight = Math.max(iframeBottom, bodyHeight, popupBottom, sslPopupBottom, scrollHeight);
+
+				var productFiltersPopupHeight = getProductFiltersPopupHeight();
+				if (productFiltersPopupHeight > 0) {
+					ecwidHeight = productFiltersPopupHeight
+				}
+
+				if ($('.ec-pika-single').height()) {
+					var pickupCalendarHeight = $('.ec-pika-single').position().top + $('.ec-pika-single').outerHeight(true);
+
+					if (pickupCalendarHeight > bodyHeight) {
+						ecwidHeight = pickupCalendarHeight + 30;
+					}
+				}
+
+				if (isInteger(height) && height > 0) {
+					ecwidHeight = height;
+				}
+
+				if ((ecwidHeight !== $(window).height() && $(window).height() !== 0) || (ecwidHeight !== prevHeight)) {
+					if(isDebugActive()) {
+						EcwidLog("Wix " + wixDeviceType + "height stats iframeBorrom="+iframeBottom+" bodyHeight="+bodyHeight+" popupBottom="+popupBottom+" windowHeight="+$(window).height()+" prevHeight="+prevHeight);
+					}
+					changeWixFrameHeight(ecwidHeight);
+				}
+			}
+
+			var updateInterval = null;
+			function startPeriodicWixHeightUpdate(delay) {
+				stopPeriodicWixHeightUpdate();
+				if (!isInteger(delay)) {
+					delay = updateHeightDelay;
+				}
+
+				updateInterval = setInterval(updateWixHeight, delay);
+			}
+
+			function stopPeriodicWixHeightUpdate() {
+				if (!!updateInterval) {
+					clearInterval(updateInterval);
+				}
+			}
+
+			startPeriodicWixHeightUpdate(updateHeightDelay);
+			window.ec = window.ec || {};
+			window.ec.wix = window.ec.wix || {};
+			window.ec.wix.updateWixHeight = updateWixHeight;
+			window.ec.wix.startPeriodicWixHeightUpdate = startPeriodicWixHeightUpdate
+			window.ec.wix.stopPeriodicWixHeightUpdate = stopPeriodicWixHeightUpdate
+
+
+			window.ecwidUseExternalReferrer = true
+			Wix.getSiteInfo(function(siteInfo){
+				var ref = new function(){
+					var value = siteInfo.referer
+					this.func = function(){
+						if (typeof(Ecwid) === "undefined" || !Ecwid.saveReferrer) {
+							setTimeout(ref.func, 1000)
+							return
+						}
+						Ecwid.saveReferrer(value)
+					}
+				}
+
+				ref.func()
+			})
+
+			var currentStorePageId = 'q512a';
+			Wix.getCurrentPageId(function(pageId) {
+				if (pageId !== 'q512a') {
+					currentStorePageId = pageId;
+					$.ajax({
+						type:'PUT',
+						url: getApiUrl('change-page-id'),
+						data: JSON.stringify({
+							pageId: pageId
+						}),
+						dataType: 'json',
+						contentType: 'application/json; charset=UTF-8'
+					})
+				}
+			});
+
+			$(document).ready(function() {
+
+				var lastAppliedParams = null;
+
+
+
+				updateHeightDelay = updateHeightDelay * 10;
+				startPeriodicWixHeightUpdate(updateHeightDelay);
+
+				function ensureCurrentPageId(callback) {
+					if (!currentStorePageId) {
+						Wix.getCurrentPageId(function(wixPageId) {
+							currentStorePageId = wixPageId;
+							callback();
+						});
+					} else {
+						callback();
+					}
+				}
+
+				if (isIOs()) {
+					var $el = $('body').find('*')
+					$el.on('touchstart', function() {
+						if(isDebugActive()) $($el).data("EcwidWixTouchStart",new Date().getTime())
+					}).on('touchend', function() {
+						if(isDebugActive()) EcwidLog("touch time is",new Date().getTime() - $($el).data("EcwidWixTouchStart"))
+					})
+				}
+
+				if (Wix.Utils.getViewMode() === 'editor') {
+					var alertPopup = new function () {
+						var $el = $('.alert')
+						this.show = function () {
+							if (false)
+								$($el).slideDown(600);
+							else
+								this.hide();
+						}
+						this.hide = function () {
+							$($el).slideUp();
+						}
+					}
+					alertPopup.show();
+				}
+
+				function saveDraftSettings() {
+					if (!lastAppliedParams) {
+						return;
+					}
+					var profile = buildProfile(lastAppliedParams);
+					saveProfile(profile, "saveSettings");
+				}
+
+				function publishDraft(pageUrl) {
+					$.get('/wix/app/profile?instance=d6TxwPmCI_jr1Bpycqm5e38w7uGrgJgLK3B2dNzI5u8.eyJpbnN0YW5jZUlkIjoiODZlZWJiY2ItYTAzMy00NjBkLTk3NTAtZjliYjFiMmNmNTg3IiwiYXBwRGVmSWQiOiIxMmYxZmJhYi04YjlkLTMwMDItODdiNS0yOTcyODk3ZTgzMTQiLCJzaWduRGF0ZSI6IjIwMjItMTItMTdUMDA6MDk6MjMuNDU2WiIsInZlbmRvclByb2R1Y3RJZCI6IldJWF9QUkVNSVVNIiwiZGVtb01vZGUiOmZhbHNlLCJhaWQiOiJiOWY3MTcxNC01NzVhLTRmZmYtOTE0MS1jOThjN2E4M2ZlMDAiLCJzaXRlT3duZXJJZCI6IjMzNWRkYWY2LTYyODktNGEwOC1iMzUyLTAyMTU4YzdhYjI0YyJ9', function (serverProfileJson, status) {
+						if (status !== 'success') {
+							if (window.console) window.console.log("Unable to get draftSettings from server: " + status);
+							return
+						}
+
+						var profile = {};
+						profile.publishedSettings = $.extend({}, serverProfileJson.draftSettings);
+
+						if (storeUrlOnServer !== pageUrl) {
+							profile.storeUrl = pageUrl;
+						}
+
+						$.ajax({
+							type: 'PUT',
+							url: '/wix/app/profile?instance=d6TxwPmCI_jr1Bpycqm5e38w7uGrgJgLK3B2dNzI5u8.eyJpbnN0YW5jZUlkIjoiODZlZWJiY2ItYTAzMy00NjBkLTk3NTAtZjliYjFiMmNmNTg3IiwiYXBwRGVmSWQiOiIxMmYxZmJhYi04YjlkLTMwMDItODdiNS0yOTcyODk3ZTgzMTQiLCJzaWduRGF0ZSI6IjIwMjItMTItMTdUMDA6MDk6MjMuNDU2WiIsInZlbmRvclByb2R1Y3RJZCI6IldJWF9QUkVNSVVNIiwiZGVtb01vZGUiOmZhbHNlLCJhaWQiOiJiOWY3MTcxNC01NzVhLTRmZmYtOTE0MS1jOThjN2E4M2ZlMDAiLCJzaXRlT3duZXJJZCI6IjMzNWRkYWY2LTYyODktNGEwOC1iMzUyLTAyMTU4YzdhYjI0YyJ9&debugInfo=OnPublished',
+							data: JSON.stringify(profile),
+							dataType: 'json',
+							contentType: 'application/json; charset=UTF-8',
+							complete: function () {
+								if (profile.storeUrl) {
+									storeUrlOnServer = profile.storeUrl;
+								}
+								draftSettingsSameAsPublished = profile.publishedSettings !== undefined;
+
+								if (profile.draftSettings) {
+									draftSettingsOnServer = profile.draftSettings;
+								}
+							}
+						});
+					});
+				}
+
+				var saveProfileTimer;
+				function saveProfile(profile, debugInfo) {
+					if (saveProfileTimer !== undefined) {
+						clearTimeout(saveProfileTimer);
+					}
+					saveProfileTimer = setTimeout(function () {
+						saveProfileTimer = undefined;
+						if (profile.publishedSettings && !draftSettingsSameAsPublished
+								|| profile.draftSettings && JSON.stringify(profile.draftSettings) !== JSON.stringify(draftSettingsOnServer)
+								|| profile.storeUrl && storeUrlOnServer !== profile.storeUrl) {
+
+							var putProfileUrl = '/wix/app/profile?instance=d6TxwPmCI_jr1Bpycqm5e38w7uGrgJgLK3B2dNzI5u8.eyJpbnN0YW5jZUlkIjoiODZlZWJiY2ItYTAzMy00NjBkLTk3NTAtZjliYjFiMmNmNTg3IiwiYXBwRGVmSWQiOiIxMmYxZmJhYi04YjlkLTMwMDItODdiNS0yOTcyODk3ZTgzMTQiLCJzaWduRGF0ZSI6IjIwMjItMTItMTdUMDA6MDk6MjMuNDU2WiIsInZlbmRvclByb2R1Y3RJZCI6IldJWF9QUkVNSVVNIiwiZGVtb01vZGUiOmZhbHNlLCJhaWQiOiJiOWY3MTcxNC01NzVhLTRmZmYtOTE0MS1jOThjN2E4M2ZlMDAiLCJzaXRlT3duZXJJZCI6IjMzNWRkYWY2LTYyODktNGEwOC1iMzUyLTAyMTU4YzdhYjI0YyJ9';
+							if (debugInfo) {
+								putProfileUrl += '&debugInfo=' + encodeURIComponent(debugInfo);
+							}
+
+							$.ajax({
+								type: 'PUT',
+								url: putProfileUrl,
+								data: JSON.stringify(profile),
+								dataType: 'json',
+								contentType: 'application/json; charset=UTF-8',
+								complete: function () {
+									if (profile.storeUrl) {
+										storeUrlOnServer = profile.storeUrl;
+									}
+									draftSettingsSameAsPublished = profile.publishedSettings !== undefined;
+
+									if (profile.draftSettings) {
+										draftSettingsOnServer = profile.draftSettings;
+									}
+								}
+							});
+						}
+					}, 1000);
+				}
+
+                function shouldSkipStateChangedEvent(state) {
+                    var diff = Date.now() - timeOfLastPageChanged;
+                    return (state == '' && diff < 2000);
+                }
+
+				Wix.addEventListener(Wix.Events.STATE_CHANGED, function(data) {
+					if (!!data && data.newState != null && !shouldSkipStateChangedEvent(data.newState) && Wix.Utils.getViewMode() !== 'editor') {
+                        EcwidLog("State Changed", data);
+						var state = data.newState;
+						if (state.match(/hex:([0-9a-f][0-9a-f])*/)) {
+							state = fromHex(state.substring("hex:".length));
+							EcwidLog("State changed from hex: [" + data.newState + "] to [" + state + "]");
+						}
+						defferChangeState(state);
+					}
+				});
+
+				Wix.addEventListener(Wix.Events.SCROLL, function(data) {
+					window.ec = window.ec || {};
+					window.ec.wix = window.ec.wix || {};
+					window.ec.wix.scroll = data;
+					EcwidLog("Wix Scroll Event", data);
+					initDefaultNoticeTop();
+					updateNoticeTop(data);
+				});
+
+				(function() {
+					var requestAnimationFrame = window.requestAnimationFrame
+							|| window.mozRequestAnimationFrame
+							|| window.webkitRequestAnimationFrame
+							|| window.msRequestAnimationFrame;
+					window.requestAnimationFrame = requestAnimationFrame;
+				})();
+
+				var requestId = null;
+				function animate(draw, duration) {
+					var start = performance.now();
+
+					requestId = requestAnimationFrame(function animate(time) {
+						var timePassed = time - start;
+						if (timePassed > duration) {
+                            timePassed = duration;
+						}
+
+						draw(timePassed);
+
+						if (timePassed < duration) {
+							requestAnimationFrame(animate);
+						}
+					});
+				}
+
+				var defaultNoticeTop = null;
+				var storeTop = null;
+				function initDefaultNoticeTop() {
+					if (defaultNoticeTop == null) {
+						defaultNoticeTop = getCurrentNoticeTop();
+					}
+					if (storeTop == null) {
+						getWixTop(function(top) {
+							storeTop = top;
+						});
+					}
+				}
+
+				function updateNoticeTop(scrollData) {
+					var safeStoreTop = storeTop ? storeTop : 0;
+					var scrollOffset = scrollData.scrollTop > safeStoreTop ? scrollData.scrollTop - safeStoreTop : 0;
+					var noticeTop = defaultNoticeTop + scrollOffset;
+					setNoticeTop(noticeTop > 0 ? noticeTop : 0);
+				}
+
+				function setNoticeTop(top) {
+					if (!!requestId) {
+						cancelAnimationFrame(requestId);
+					}
+
+					var currentTop = getCurrentNoticeTop();
+					var incrementTop = top - currentTop;
+					var timeout = 250;
+
+					animate(function(timePassed) {
+						var elements = getNoticeTopElements();
+						for (var i = 0; i < elements.length; i++) {
+							elements[i].style.top = currentTop + Math.round(incrementTop * timePassed / timeout) + "px";
+						}
+					}, timeout);
+				}
+
+				function getCurrentNoticeTop() {
+					var elements = getNoticeTopElements();
+					for (var i = 0; i < elements.length; i++) {
+						var noticeTop = elements[i].getBoundingClientRect().top;
+						if (noticeTop > 0) {
+							return noticeTop;
+						}
+					}
+					return 0;
+				}
+
+				function getNoticeTopElements() {
+					return document.getElementsByClassName("ec-notices--top");
+				}
+
+				Wix.addEventListener(Wix.Events.SITE_PUBLISHED, function() {
+					ensureCurrentPageId(function () {
+						Wix.Features.isSupported(Wix.Features.Types.ADD_COMPONENT , function(supported) {
+							if (supported) {
+								Wix.getStateUrl(currentStorePageId, '', function (data) {
+									publishSite(data.url);
+								});
+							} else {
+								Wix.Utils.getSectionUrl({sectionId: currentStorePageId}, function (data) {
+									publishSite(data.url);
+								});
+							}
+						});
+					});
+				});
+
+				function publishSite(pageUrl) {
+					setCookie("wixStoreUrl", pageUrl, 7);
+					publishDraft(pageUrl);
+					warmUpSiteStatic(pageUrl);
+				}
+
+				function warmUpSiteStatic(storeUrl) {
+					try {
+						var iframe = document.createElement("iframe");
+						iframe.style.display = "none";
+						iframe.src = storeUrl;
+						document.body.appendChild(iframe);
+
+						iframe.onload = function () {
+							iframe.parentNode.removeChild(iframe);
+						};
+					} catch (e) {
+						console.log("Could not warm up static ", e);
+					}
+				}
+
+				Wix.addEventListener(Wix.Events.SITE_SAVED, function() {
+					saveDraftSettings();
+				});
+			});
+
+			function buildProfile(params) {
+				if (!params) {
+					return;
+				}
+				params.colors = params.colors || {};
+				params.colors.bgColor = params.colors.bgColor || { value: null };
+				params.colors.foregroundColor = params.colors.foregroundColor || { value: null };
+				params.colors.linkColor = params.colors.linkColor || { value: null };
+				params.colors.buttonColor = params.colors.buttonColor || { value: null };
+				params.colors.priceColor = params.colors.priceColor || { value: null };
+
+				params.booleans = params.booleans || {};
+				params.numbers = params.numbers || {};
+				params.fonts = params.fonts || {};
+				params.fonts.fontFamily = params.fonts.fontFamily || { family: null, value: null };
+				var settings = {};
+				var consts = getConsts();
+				settings.color = params.colors.bgColor.value;
+				settings.colorForeground = params.colors.foregroundColor.value;
+				settings.colorLink = params.colors.linkColor.value;
+				settings.colorButton = params.colors.buttonColor.value;
+				settings.colorPrice = params.colors.priceColor.value;
+				settings.transparent = false;
+				settings.fontFamily = calculateFontFamily(params.fonts.fontFamily.value, params.fonts.fontFamily.family);
+				settings.gridViewRows = params.numbers.gridRowsCount;
+				settings.gridViewCols = params.numbers.gridColumnsCount;
+				settings.tableViewRows = params.numbers.tableRowsCount;
+				settings.listViewRows = params.numbers.listRowsCount;
+				settings.categoriesPerRow = params.numbers.columnSlider;
+				settings.category = params.numbers.categoryDropDown;
+				settings.defaultView = consts.viewValues[params.numbers.thumbnails];
+				settings.imageSize = consts.sizeValues[params.numbers.imageSize];
+				settings.imageAspectRatio = consts.aspectRatioValues[params.numbers.imageAspectRatio];
+				settings.imageHasShadow = params.booleans.imageHasShadowParam;
+
+				<!-- если выбрали опцию image size под которую нет константы размера, то картинки отключили -->
+				<!-- если выбрали опцию image size и константа есть то включили -->
+				if (params.numbers.imageSize !== "undefined" && settings.imageSize) {
+					settings.productListShowProductImages = true;
+				} else if (params.numbers.imageSize !== "undefined") {
+					settings.productListShowProductImages = false;
+				}
+
+				var breadcrumbsIsHide = consts.breadcrumbsPosition[params.numbers.productDetailsShowBreadcrumbsPosition] === 'HIDE';
+				settings.productDetailsShowBreadcrumbs = !breadcrumbsIsHide;
+
+				settings.productListProductInfoLayout = consts.listLayoutValues[params.numbers.productCardLayout];
+				settings.productListShowFrame = params.booleans.productCardFrameParam;
+				settings.productListTitleBehavior = consts.showValues[params.numbers.productCardTitle];
+				settings.productListPriceBehavior = consts.showValues[params.numbers.productCardPrice];
+				settings.productListSkuBehavior = consts.showValues[params.numbers.productCardSku];
+				settings.productListBuyButtonBehavior = consts.showValues[params.numbers.productCardBuyButton];
+				settings.productListShowAdditionalImageOnHover = consts.booleanValues[params.numbers.productCardAdditionalImage];
+				settings.productListCategoryTitleBehavior = consts.positionValues[params.numbers.categoryNamePosition];
+				settings.productDetailsLayout = consts.detailsLayoutValues[params.numbers.productDetailsLayout];
+				settings.productDetailsGalleryLayout = consts.galleryLayoutValues[params.numbers.productDetailsGalleryLayout];
+				settings.productDetailsShowProductName = params.booleans.productDetailsShowProductNameParam;
+				settings.productDetailsShowProductSku = params.booleans.productDetailsShowProductSkuParam;
+				settings.productDetailsShowProductPrice = params.booleans.productDetailsShowProductPriceParam;
+				settings.productDetailsShowProductOptions = params.booleans.productDetailsShowProductOptionsParam;
+				settings.productDetailsShowQty = params.booleans.productDetailsShowQtyParam;
+				settings.productDetailsShowNumberOfItemsInStock = params.booleans.productDetailsShowNumberOfItemsInStockParam;
+				settings.productDetailsShowInStockLabel = params.booleans.productDetailsShowInStockLabelParam;
+				settings.productDetailsShowWholesalePrices = params.booleans.productDetailsShowWholesalePricesParam;
+				settings.productDetailsShowAttributes = params.booleans.productDetailsShowAttributesParam;
+				settings.productDetailsShowWeight = params.booleans.productDetailsShowWeightParam;
+				settings.productDetailsShowProductDescription = params.booleans.productDetailsShowProductDescriptionParam;
+				settings.productDetailsShowShareButtons = params.booleans.productDetailsShowShareButtonsParam;
+ 				settings.enableCatalogOnOnePage = params.booleans.enableCatalogOnOnePage;
+				settings.productFiltersOpenedByDefaultOnCategoryPage = params.booleans.productFiltersOpenedByDefaultOnCategoryPage;
+ 				settings.productDetailsShowSubtitle = params.booleans.productDetailsShowSubtitleParam;
+ 				settings.productListSubtitlesBehavior = consts.showValues[params.numbers.productCardSubtitle];
+				settings.productDetailsShowBreadcrumbsPosition = consts.breadcrumbsPosition[params.numbers.productDetailsShowBreadcrumbsPosition];
+				settings.productDetailsShowNavigationArrows = consts.booleanValues[params.numbers.productDetailsShowNavigationArrows];
+				settings.productDetailsShowProductPhotoZoom = params.booleans.productDetailsShowProductPhotoZoomParam;
+
+                return {
+                    draftSettings: settings
+                };
+            }
+
+			// calculate font family from wix component raw font style format
+			function calculateFontFamily(fontValue, fallback) {
+				if (!fontValue) {
+					return fallback;
+				}
+
+				// must start with 'font:' prefix
+				if (fontValue.indexOf('font:') !== 0) {
+					return fallback;
+				}
+
+				try {
+					fontValue = fontValue.slice(5, fontValue.length - 1); // remove font: prefix and last char ';'
+
+					var styledSpan = document.createElement('span');
+					styledSpan.style.font = fontValue;
+
+					var extractedFontFamily = styledSpan.style.fontFamily;
+					if (!extractedFontFamily) {
+						return fallback;
+					}
+
+					return extractedFontFamily;
+				} catch (e) {
+					return fallback;
+				}
+			}
+
+			function updateChameleonConfig(data) {
+				data.colors = data.colors || {};
+
+				window.ec = window.ec || {};
+				window.ec.config = window.ec.config || {};
+				window.ec.config.chameleon = window.ec.config.chameleon || {};
+				window.ec.config.chameleon.colors = window.ec.config.chameleon.colors || {};
+
+				function updateColor(chameleonName, color, opacity) {
+					if (color && color.value) {
+						if (typeof opacity !== 'undefined' && opacity != null) {
+							window.ec.config.chameleon.colors[chameleonName] = updateOpacity(color.value, opacity);
+						} else {
+							window.ec.config.chameleon.colors[chameleonName] = color.value;
+						}
+					}
+				}
+
+				updateColor('color-foreground', data.colors.foregroundColor);
+				updateColor('color-link', data.colors.linkColor);
+				updateColor('color-button', data.colors.buttonColor);
+				updateColor('color-price', data.colors.priceColor);
+				updateColor('color-background', data.colors.bgColor, 0);
+
+				if (data.fonts && data.fonts.fontFamily && data.fonts.fontFamily.family) {
+					var calulatedFontFamily = calculateFontFamily(data.fonts.fontFamily.value, data.fonts.fontFamily.family);
+					window.ec.config.chameleon.font = window.ec.config.chameleon.font || {};
+					window.ec.config.chameleon.font['font-family'] = calulatedFontFamily;
+				}
+			}
+
+			function updateLookAndFeelConfig(data) {
+				var consts = getConsts();
+
+				function updateSetting(name, value) {
+					if (typeof value !== 'undefined' && value != null) {
+						window.ec.storefront[name] = value;
+					}
+				}
+
+				window.ec = window.ec || {};
+				window.ec.storefront = window.ec.storefront || {};
+
+				data.numbers = data.numbers || {};
+				var settings = {};
+
+				var imageSizeSelection = consts.sizeValues[data.numbers.imageSize];
+				if (imageSizeSelection) {
+					settings.product_list_image_size = imageSizeSelection;
+					settings.product_list_show_product_images = true;
+				} else if (data.numbers.imageSize) {
+					settings.product_list_show_product_images = false;
+				}
+
+				settings.product_list_image_aspect_ratio = consts.aspectRatioValues[data.numbers.imageAspectRatio];
+				settings.product_list_image_has_shadow = data.booleans.imageHasShadowParam;
+				settings.product_list_product_info_layout = consts.listLayoutValues[data.numbers.productCardLayout];
+				settings.product_list_show_frame = data.booleans.productCardFrameParam;
+				settings.product_list_title_behavior = consts.showValues[data.numbers.productCardTitle];
+				settings.product_list_price_behavior = consts.showValues[data.numbers.productCardPrice];
+				settings.product_list_sku_behavior = consts.showValues[data.numbers.productCardSku];
+				settings.product_list_subtitles_behavior = consts.showValues[data.numbers.productCardSubtitle];
+				settings.product_list_buybutton_behavior = consts.showValues[data.numbers.productCardBuyButton];
+				settings.product_list_show_additional_image_on_hover = consts.booleanValues[data.numbers.productCardAdditionalImage];
+				settings.product_list_category_title_behavior = consts.positionValues[data.numbers.categoryNamePosition];
+				settings.product_details_layout = consts.detailsLayoutValues[data.numbers.productDetailsLayout];
+				if (typeof settings.product_details_layout !== 'undefined' && settings.product_details_layout != null && settings.product_details_layout.indexOf('_BELOW_IMAGE') !== -1) {
+					settings.product_details_layout = settings.product_details_layout.substring(0, settings.product_details_layout.lastIndexOf('_BELOW_IMAGE'));
+					settings.product_details_two_columns_with_right_sidebar_show_product_description_on_sidebar = false;
+				} else {
+					settings.product_details_two_columns_with_right_sidebar_show_product_description_on_sidebar = true;
+				}
+
+				var breadcrumbsIsHide = consts.breadcrumbsPosition[data.numbers.productDetailsShowBreadcrumbsPosition] === 'HIDE';
+				settings.product_details_show_breadcrumbs = !breadcrumbsIsHide;
+
+				settings.product_details_gallery_layout = consts.galleryLayoutValues[data.numbers.productDetailsGalleryLayout];
+				settings.product_details_show_product_name = data.booleans.productDetailsShowProductNameParam;
+				settings.product_details_show_product_sku = data.booleans.productDetailsShowProductSkuParam;
+				settings.product_details_show_subtitle = data.booleans.productDetailsShowSubtitleParam;
+				settings.product_details_show_product_price = data.booleans.productDetailsShowProductPriceParam;
+				settings.product_details_show_product_options = data.booleans.productDetailsShowProductOptionsParam;
+				settings.product_details_show_qty = data.booleans.productDetailsShowQtyParam;
+				settings.product_details_show_number_of_items_in_stock = data.booleans.productDetailsShowNumberOfItemsInStockParam;
+				settings.product_details_show_in_stock_label = data.booleans.productDetailsShowInStockLabelParam;
+				settings.product_details_show_wholesale_prices = data.booleans.productDetailsShowWholesalePricesParam;
+				settings.product_details_show_attributes = data.booleans.productDetailsShowAttributesParam;
+				settings.product_details_show_weight = data.booleans.productDetailsShowWeightParam;
+				settings.product_details_show_product_description = data.booleans.productDetailsShowProductDescriptionParam;
+				settings.product_details_show_share_buttons = data.booleans.productDetailsShowShareButtonsParam;
+				settings.enable_catalog_on_one_page = data.booleans.enableCatalogOnOnePage;
+				settings.product_filters_opened_by_default_on_category_page = data.booleans.productFiltersOpenedByDefaultOnCategoryPage;
+				settings.product_details_show_breadcrumbs_position = consts.breadcrumbsPosition[data.numbers.productDetailsShowBreadcrumbsPosition];
+				settings.product_details_show_navigation_arrows = consts.booleanValues[data.numbers.productDetailsShowNavigationArrows];
+				settings.product_details_show_product_photo_zoom = data.booleans.productDetailsShowProductPhotoZoomParam;
+
+				updateSetting('product_list_image_size', settings.product_list_image_size);
+				updateSetting('product_list_category_image_size', settings.product_list_image_size);
+				updateSetting('product_list_image_aspect_ratio', settings.product_list_image_aspect_ratio);
+				updateSetting('product_list_category_image_aspect_ratio', settings.product_list_image_aspect_ratio);
+				updateSetting('product_list_image_has_shadow', settings.product_list_image_has_shadow);
+ 				updateSetting('product_list_show_product_images', settings.product_list_show_product_images);
+				updateSetting('product_list_product_info_layout', settings.product_list_product_info_layout);
+				updateSetting('product_list_show_frame', settings.product_list_show_frame);
+				updateSetting('product_list_title_behavior', settings.product_list_title_behavior);
+				updateSetting('product_list_price_behavior', settings.product_list_price_behavior);
+				updateSetting('product_list_sku_behavior', settings.product_list_sku_behavior);
+				updateSetting('product_list_buybutton_behavior', settings.product_list_buybutton_behavior);
+				updateSetting('product_list_show_additional_image_on_hover', settings.product_list_show_additional_image_on_hover);
+				updateSetting('product_list_category_title_behavior', settings.product_list_category_title_behavior);
+				updateSetting('product_details_layout', settings.product_details_layout);
+				updateSetting('product_details_two_columns_with_right_sidebar_show_product_description_on_sidebar', settings.product_details_two_columns_with_right_sidebar_show_product_description_on_sidebar);
+				updateSetting('product_details_gallery_layout', settings.product_details_gallery_layout);
+				updateSetting('product_details_show_product_name', settings.product_details_show_product_name);
+				updateSetting('product_details_show_breadcrumbs', settings.product_details_show_breadcrumbs);
+				updateSetting('product_details_show_product_sku', settings.product_details_show_product_sku);
+				updateSetting('product_details_show_product_price', settings.product_details_show_product_price);
+				updateSetting('product_details_show_sale_price', settings.product_details_show_product_price);
+				updateSetting('product_details_show_price_per_unit', settings.product_details_show_product_price);
+				updateSetting('product_details_show_tax', settings.product_details_show_product_price);
+				updateSetting('product_details_show_product_options', settings.product_details_show_product_options);
+				updateSetting('product_details_show_qty', settings.product_details_show_qty);
+				updateSetting('product_details_show_number_of_items_in_stock', settings.product_details_show_number_of_items_in_stock);
+				updateSetting('product_details_show_in_stock_label', settings.product_details_show_in_stock_label);
+				updateSetting('product_details_show_wholesale_prices', settings.product_details_show_wholesale_prices);
+				updateSetting('product_details_show_attributes', settings.product_details_show_attributes);
+				updateSetting('product_details_show_weight', settings.product_details_show_weight);
+				updateSetting('product_details_show_product_description', settings.product_details_show_product_description);
+				updateSetting('product_details_show_share_buttons', settings.product_details_show_share_buttons);
+				updateSetting('enable_catalog_on_one_page', settings.enable_catalog_on_one_page);
+				updateSetting('product_list_subtitles_behavior', settings.product_list_subtitles_behavior);
+				updateSetting('product_details_show_subtitle', settings.product_details_show_subtitle);
+				updateSetting('product_filters_opened_by_default_on_category_page', settings.product_filters_opened_by_default_on_category_page);
+				updateSetting('product_details_show_navigation_arrows', settings.product_details_show_navigation_arrows);
+				updateSetting('product_details_show_product_photo_zoom', settings.product_details_show_product_photo_zoom);
+				updateSetting('product_details_show_breadcrumbs_position', settings.product_details_show_breadcrumbs_position);
+			}
+		})()
+	</script>
+</head>
+
+<body  style="background:rgba(255,255,255,1)">
+	<div id="ecwid-iframe-rollover-container">
+		<div id="main" >
+
+<script type='text/javascript'>
+
+			window.ec = window.ec || {};
+		window.ec.config = window.ec.config || {};
+		window.ec.storefront = window.ec.storefront || {};
+		window.ec.config.chameleon = window.ec.config.chameleon || {};
+		window.ec.config.chameleon.colors = window.ec.config.chameleon.colors || {};
+		var colors = window.ec.config.chameleon.colors;
+
+		colors['color-foreground'] = 'rgba(51,51,51,1)';
+		colors['color-link'] = 'rgba(30,126,200,1)';
+		colors['color-button'] = 'rgba(67,156,160,1)';
+		colors['color-price'] = 'rgba(139,0,0,1)';
+		colors['color-background'] = updateOpacity('rgba(255,255,255,1)', 0);
+		var fontFamily = 'spinnaker, sans-serif';
+		if (!!fontFamily) {
+			var font = window.ec.config.chameleon.font || {};
+			font['font-family'] = fontFamily;
+			window.ec.config.chameleon.font = font;
+		}
+
+	window.ec.storefront.product_list_image_size = 'MEDIUM';
+	window.ec.storefront.product_list_category_image_size = 'MEDIUM';
+	window.ec.storefront.product_list_image_aspect_ratio = 'LANDSCAPE_15';
+	window.ec.storefront.product_list_category_image_aspect_ratio = 'LANDSCAPE_15';
+	window.ec.storefront.product_list_image_has_shadow = true;
+	window.ec.storefront.product_list_show_product_images = true;
+	window.ec.storefront.product_list_product_info_layout = 'CENTER';
+	window.ec.storefront.product_list_show_frame = false;
+	window.ec.storefront.product_list_title_behavior = 'SHOW';
+	window.ec.storefront.product_list_price_behavior = 'SHOW';
+	window.ec.storefront.product_list_sku_behavior = 'HIDE';
+	window.ec.storefront.product_list_buybutton_behavior = 'HIDE';
+	window.ec.storefront.product_list_show_additional_image_on_hover = false;
+	window.ec.storefront.product_list_category_title_behavior = 'SHOW_BELOW_IMAGE';
+	window.ec.storefront.product_details_layout = 'TWO_COLUMNS_SIDEBAR_ON_THE_RIGHT';
+	if (typeof window.ec.storefront.product_details_layout !== 'undefined' && window.ec.storefront.product_details_layout != null && window.ec.storefront.product_details_layout.indexOf('_BELOW_IMAGE') !== -1) {
+		window.ec.storefront.product_details_two_columns_with_right_sidebar_show_product_description_on_sidebar = false;
+		window.ec.storefront.product_details_layout = window.ec.storefront.product_details_layout.substring(0, window.ec.storefront.product_details_layout.lastIndexOf('_BELOW_IMAGE'));
+	}
+	window.ec.storefront.product_details_gallery_layout = 'IMAGE_SINGLE_THUMBNAILS_HORIZONTAL';
+	window.ec.storefront.product_details_show_product_name = true;
+	window.ec.storefront.product_details_show_breadcrumbs = true;
+	window.ec.storefront.product_details_show_product_sku = true;
+	window.ec.storefront.product_details_show_product_price = true;
+	window.ec.storefront.product_details_show_sale_price = true;
+	window.ec.storefront.product_details_show_price_per_unit = true;
+	window.ec.storefront.product_details_show_tax = true;
+	window.ec.storefront.product_details_show_product_options = true;
+	window.ec.storefront.product_details_show_qty = true;
+	window.ec.storefront.product_details_show_number_of_items_in_stock = true;
+	window.ec.storefront.product_details_show_in_stock_label = false;
+	window.ec.storefront.product_details_show_wholesale_prices = true;
+	window.ec.storefront.product_details_show_attributes = true;
+	window.ec.storefront.product_details_show_weight = false;
+	window.ec.storefront.product_details_show_product_description = true;
+	window.ec.storefront.product_details_show_share_buttons = true;
+	window.ec.storefront.enable_catalog_on_one_page = false;
+	window.ec.storefront.product_details_show_subtitle = true;
+	window.ec.storefront.product_list_subtitles_behavior = 'SHOW';
+	window.ec.storefront.product_filters_opened_by_default_on_category_page = false;
+	window.ec.storefront.product_details_show_navigation_arrows = true;
+	window.ec.storefront.product_details_show_product_photo_zoom = true;
+	window.ec.storefront.product_details_show_breadcrumbs_position = 'NAVIGATION_CONTAINER';
+
+</script>
+
+		<script type='text/javascript'>
+			window.ec = window.ec || {};
+			window.ec.config = window.ec.config || {};
+			window.ec.config.useExternalState = true;
+			window.ec.config.interactive = true;
+			window.ec.config.storefrontUrls = window.ec.config.storefrontUrls || {};
+			window.ec.config.storefrontUrls.cleanUrls = true;
+			window.ec.config.baseUrl = '/wix/app/store';
+			window.ec.storefront = window.ec.storefront || {};
+			window.ec.storefront.sharing_button_link = "DIRECT_PAGE_URL";
+
+			var scrollerInstaller = function() {
+				window.ec.config.navigation_scrolling = 'custom';
+				window.ec.config.custom_scroller = function () {
+					Wix.getBoundingRectAndOffsets(function (data) {
+						var scrollIndent = window.ec.config.scroll_indent; 
+						if (typeof scrollIndent === "undefined") {
+							scrollIndent = 100;
+						}
+						var topThreshold = window.outerHeight * 0.27;
+						var rectTopWithIndent = data.rect.top - scrollIndent;
+						if (rectTopWithIndent < 0 || rectTopWithIndent > topThreshold) {
+							var top = 0;
+							if (data.offsets.y > topThreshold) {
+								top = data.offsets.y - scrollIndent;
+							}
+							console && console.log("Need to scroll: " + needToScroll);
+							if (!!needToScroll) {
+								Wix.scrollTo(0, top);
+								needToScroll = false;
+							}
+						} else {
+							console && console.log("Skipping scroll");
+							needToScroll = false;
+						}
+					});
+				};
+			};
+			scrollerInstaller();
+
+			function changeEcwidState(state) {
+				window.ec.config.custom_scroller();
+				if (window.ec.setInternalState) {
+					console && console.log("window.ec.setInternalState("+state+")");
+					window.ec.setInternalState(state);
+				} else {
+					console && console.log("window.ec.config.ecwidInitialState = "+state);
+					window.ec.config.ecwidInitialState = state;
+				}
+			}
+			window.ec.config.customWidgetClickHandler = function(clickedHash) {
+				console && console.log("customWidgetClickHandler(" + clickedHash + ")");
+				if (clickedHash &&  clickedHash.length && clickedHash[0] === '#') {
+					var state = clickedHash.replace('#', '')
+				} else {
+					var state = '';
+				}
+				changeEcwidState(state);
+			};
+
+			window.ec.config.customUpdatePageMetadata = function(pageMetaData) {
+				if (Wix.Utils.getViewMode() !== 'site') {
+					return;
+				}
+
+				if (pageMetaData.description === "") {
+					pageMetaData.description = " ";
+				}
+
+				console.log("Updating page metadata using Wix SDK." +
+						"Title: " + pageMetaData.title + ",description: " + pageMetaData.description);
+
+				Wix.setPageMetadata({
+					title: pageMetaData.title,
+					description: pageMetaData.description
+				});
+			};
+
+			appState = "";
+			changeEcwidState(appState);
+
+			window.ec = window.ec || {};
+			window.ec.storefront = window.ec.storefront || {};
+			window.ec.storefront.staticPages = window.ec.storefront.staticPages || {};
+			ec.storefront.staticPages.switchToDynamicCallback = function () {
+				scrollerInstaller();
+			}
+
+			function getEcwidConsentByWixConsentPolicy(policyDetails) {
+				var allConsentsAcceptedByDefault = policyDetails.defaultPolicy === true
+						&& policyDetails.policy.functional === true
+						&& policyDetails.policy.analytics === true
+						&& policyDetails.policy.advertising === true
+						&& policyDetails.policy.dataToThirdParty === true
+						&& policyDetails.policy.essential === true;
+				var allConsentsAcceptedManually = policyDetails.defaultPolicy === false
+						&& policyDetails.policy.functional === true
+						&& policyDetails.policy.analytics === true
+						&& policyDetails.policy.advertising === true
+						&& policyDetails.policy.dataToThirdParty === true
+						&& policyDetails.policy.essential === true;
+				if (allConsentsAcceptedByDefault) {
+					console.log("All wix consents accepted by default - follow consent policies as per own ecwid setting");
+					return null;
+				} else if (allConsentsAcceptedManually) {
+					console.log("All wix consents accepted manually by user - override ecwid consent as accepted");
+					return true;
+				} else {
+					console.log("Wix consents are not chosen or some of wix consents declined manually by user - override ecwid consent as declined",
+							policyDetails);
+					return false;
+				}
+			}
+
+			function setEcwidTrackingConsent(isAccepted) {
+				ec.config = ec.config || {};
+				ec.config.tracking = ec.config.tracking || {};
+				ec.config.tracking['ask_consent'] = true;
+				ec.config.tracking['user_response'] = isAccepted ? "ACCEPTED" : "DECLINED";
+			}
+
+			function getWixConsentPolicy() {
+				return Wix.Utils.getCurrentConsentPolicy();
+			}
+
+			if (!isInsideWixEditor()) {
+				var wixConsentPolicy = getWixConsentPolicy();
+				var ecwidConsent = getEcwidConsentByWixConsentPolicy(wixConsentPolicy);
+				if (ecwidConsent != null) {
+					setEcwidTrackingConsent(ecwidConsent);
+				}
+			}
+		</script>
+			<script type='text/javascript' src='https://app.ecwid.com/script.js?10492821&data_platform=wix' charset="utf-8"></script>
+			<script type='text/javascript'>
+				if (isInsideWixEditor()) {
+					xProductBrowser("categoriesPerRow=3",  "categoryView=grid", "views=grid(20,3) list(60) table(60)", "defaultCategoryId=-1");
+				} else {
+					xProductBrowser("categoriesPerRow=3",  "categoryView=grid", "views=grid(20,3) list(60) table(60)", "defaultCategoryId=-1");
+				}
+			</script>
+				<script type="text/javascript">xMinicart("style=","layout=MiniAttachToProductBrowser");</script>
+			<div id="custom-html"></div>
+		</div>
+		<script>
+			var wix_site_url = (Wix.Utils.getViewMode() == 'site' ? 'https://www.seedlingtheatrecompany.com/online-store' : '')
+			var timeOfLastPageChanged = 0;
+
+			var currentPage = parseCurrentPage();
+			if (isValidPage(currentPage)) {
+				console && console.log("Current Ecwid page from storage: type - " + currentPage.type + ", hash - " + currentPage.hash);
+				changePage(currentPage.type, currentPage.hash)
+				removeCurrentPageFromStorage();
+			}
+
+			Ecwid.customHistoryStateHandler = function (state) {
+				console && console.log("Ecwid.customHistoryStateHandler(" + state + ")");
+				if (Wix.Utils.getViewMode() != 'editor') {
+					ecwidState.pushState(state);
+				}
+			};
+
+			function parseCurrentPage() {
+				try {
+					return JSON.parse(getCurrentPageFromStorage());
+				} catch (e) {
+					console && console.log("Error occured while parsing JSON with widget, opening the main page");
+				}
+			}
+
+			function getElementTopOffset(elementId) {
+				var element = document.getElementById(elementId);
+				if (element) {
+					return element.getBoundingClientRect().top;
+				}
+				return 0;
+			}
+
+			Ecwid.OnAPILoaded.add(function() {
+				if (!isInsideWixEditor()) {
+					Wix.addEventListener(Wix.Events.CONSENT_POLICY_UPDATE, function(data) {
+						var ecwidConsent = getEcwidConsentByWixConsentPolicy(data);
+						if (ecwidConsent != null) {
+							setEcwidTrackingConsent(ecwidConsent);
+							Ecwid.setTrackingConsent(ecwidConsent ? "ACCEPT" : "DECLINE");
+						}
+					});
+
+					Wix.getSiteInfo(function(siteInfo) {
+						if (!!window.ec && !!window.ec.saveUtmDataFromUrl) {
+							window.ec.saveUtmDataFromUrl(siteInfo.url);
+						}
+					});
+
+					var currentConsent = Ecwid.getTrackingConsent();
+					if (currentConsent.askConsent) {
+						Ecwid.OnConsentChanged.add(function () {
+							var newConsent = Ecwid.getTrackingConsent();
+							if (newConsent.askConsent && newConsent.userResponse === "DECLINED" && currentConsent.userResponse === "ACCEPTED") {
+								try {
+									// Get current site url and navigate _self to this url.
+									// Will reload current page and save state
+									Wix.getSiteInfo(function (info) {
+										Wix.navigateTo({type: 'ExternalLink', target: '_self', url: info.url})
+									});
+								} catch (e) {}
+							}
+							currentConsent = newConsent;
+						});
+					}
+				}
+			});
+
+			Ecwid.OnPageLoad.add(function(page) {
+				var checkoutElementId;
+				switch (page.type) {
+					case "CHECKOUT_PAYMENT_DETAILS":
+						checkoutElementId = "ec-cart-step--payment";
+						break;
+					case "CHECKOUT_ADDRESS":
+						checkoutElementId = "ec-cart-step--address";
+						break;
+					case "CHECKOUT_DELIVERY":
+						checkoutElementId = "ec-cart-step--delivery";
+						break;
+					case "CHECKOUT_TAX_INFORMATION":
+						checkoutElementId = "ec-cart-step--tax-information";
+						break;
+				}
+				if (!checkoutElementId) {
+					return;
+				}
+				getWixTop(function (top) {
+					Wix.scrollTo(0, getElementTopOffset(checkoutElementId) + top);
+				});
+			});
+
+			Ecwid.OnCartChanged.add(function (cart) {
+				Wix.PubSub.publish("ecwid_cart_changed", {cart: cart}, false);
+			});
+
+			var timeout = null;
+
+			function switchStaticToDynamic() {
+				if (!!ec && !!ec.storefront && !!ec.storefront.staticPages && !!ec.storefront.staticPages.switchStaticToDynamic) {
+					ec.storefront.staticPages.switchStaticToDynamic();
+				}
+			}
+
+			function OneTimePageNavigation(callback) {
+				if (!!timeout) {
+					clearTimeout(timeout);
+				}
+				timeout = setTimeout(function () {
+					callback.call();
+					timeout = null;
+				}, 100);
+			}
+
+			if (window.location.search.indexOf("send-refresh=true") > 0) {
+				Wix.PubSub.publish('settings_changed', {}, false);
+			}
+
+			var waitForPubSubIsReady = function (onReadyCallback) {
+				var timerSubName = "wait_for_pubsub_is_ready";
+				var lastSubId = null;
+				var pubSubReady = false;
+				var unsubscribe = function (subId) {
+					if (subId) {
+						Wix.PubSub.unsubscribe(timerSubName, lastSubId);
+					}
+				};
+				var pubsubInterval = setInterval(function () {
+					unsubscribe(lastSubId);
+					lastSubId = Wix.PubSub.subscribe(timerSubName, function (event) {
+						unsubscribe(lastSubId);
+						clearInterval(pubsubInterval);
+						if (pubSubReady) {
+							return;
+						}
+
+						pubSubReady = true;
+						onReadyCallback();
+					}, true);
+
+					Wix.PubSub.publish(timerSubName, {}, true);
+				}, 50);
+			};
+
+			waitForPubSubIsReady(function () {
+				Wix.PubSub.subscribe('ecwid_page_changed', function (event) {
+					var page = parseCurrentPage();
+					if (isValidPage(page)) {
+						console && console.log("state: ecwid_page_changed: type - " + page.type + ", hash - " + page.hash);
+						changePage(page.type, page.hash);
+						removeCurrentPageFromStorage();
+					}
+				}, true);
+
+				Wix.PubSub.subscribe('settings_changed', function (event) {
+					var hash = window.location.hash;
+					var url = window.location.href.replace("send-refresh=true", "").replace(hash, "") + "&" + Math.random() + hash;
+					window.location = url;
+				}, false);
+			});
+
+			function isValidPage(page) {
+				return !!page && !!page.type && !!page.hash;
+			}
+
+			function changePage(type, hash) {
+				switch (type) {
+					case 'CART':
+					case 'CATEGORY':
+					case 'SEARCH':
+						switchStaticToDynamic();
+						OneTimePageNavigation(function () {
+							if (type == 'SEARCH') {
+								location.hash = decodeURI(hash);
+								ecwidState.pushState(decodeURI(hash.substring(1)));
+							} else {
+								location.hash = hash;
+								ecwidState.pushState(hash.substring(1));
+							}
+							Wix.PubSub.publish("ecwid_page_changed", {type: "noop"}, true);
+							timeOfLastPageChanged = Date.now();
+						});
+						break;
+					default:
+						OneTimePageNavigation(function () {
+						});
+						break;
+				}
+			}
+		</script>
+	</div>
+</body>
+</html>
